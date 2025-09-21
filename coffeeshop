@@ -1,0 +1,136 @@
+// CoffeeShop.java
+// Demonstration of Factory and Abstract Factory patterns
+// Clean Code principles applied: meaningful names, SRP, small methods, clear structure.
+
+interface Beverage {
+    String getName();
+    String getDescription();
+    int getPriceCents();
+}
+
+final class Espresso implements Beverage {
+    @Override public String getName() { return "Espresso"; }
+    @Override public String getDescription() { return "Strong and bold single shot"; }
+    @Override public int getPriceCents() { return 150; }
+}
+
+final class Latte implements Beverage {
+    @Override public String getName() { return "Latte"; }
+    @Override public String getDescription() { return "Creamy milk with espresso"; }
+    @Override public int getPriceCents() { return 250; }
+}
+
+final class Tea implements Beverage {
+    @Override public String getName() { return "Tea"; }
+    @Override public String getDescription() { return "Light and soothing"; }
+    @Override public int getPriceCents() { return 120; }
+}
+
+/**
+ * Factory Pattern — centralizes beverage creation.
+ */
+final class BeverageFactory {
+    private BeverageFactory() {}
+    public static Beverage createBeverage(String type) {
+        if (type == null) throw new IllegalArgumentException("Type cannot be null");
+        switch (type.toLowerCase()) {
+            case "espresso": return new Espresso();
+            case "latte":    return new Latte();
+            case "tea":      return new Tea();
+            default: throw new IllegalArgumentException("Unknown beverage: " + type);
+        }
+    }
+}
+
+interface Pastry {
+    String getName();
+    String getDescription();
+    int getPriceCents();
+}
+
+final class Croissant implements Pastry {
+    @Override public String getName() { return "Croissant"; }
+    @Override public String getDescription() { return "Buttery flaky pastry"; }
+    @Override public int getPriceCents() { return 180; }
+}
+
+final class Muffin implements Pastry {
+    @Override public String getName() { return "Muffin"; }
+    @Override public String getDescription() { return "Soft, fresh-baked muffin"; }
+    @Override public int getPriceCents() { return 160; }
+}
+
+/**
+ * Abstract Factory — families of products (Beverage + Pastry combos).
+ */
+interface ShopFactory {
+    Beverage createBeverage();
+    Pastry createPastry();
+    String getFactoryName();
+}
+
+final class CityAFactory implements ShopFactory {
+    @Override public Beverage createBeverage() { return new Latte(); }
+    @Override public Pastry createPastry() { return new Croissant(); }
+    @Override public String getFactoryName() { return "City A Shop"; }
+}
+
+final class CityBFactory implements ShopFactory {
+    @Override public Beverage createBeverage() { return new Espresso(); }
+    @Override public Pastry createPastry() { return new Muffin(); }
+    @Override public String getFactoryName() { return "City B Shop"; }
+}
+
+/**
+ * Service class demonstrating Dependency Injection + Clean Code practices.
+ */
+final class OrderService {
+    private final ShopFactory factory;
+    public OrderService(ShopFactory factory) { this.factory = factory; }
+
+    public String placeComboOrder() {
+        Beverage beverage = factory.createBeverage();
+        Pastry pastry = factory.createPastry();
+        int total = beverage.getPriceCents() + pastry.getPriceCents();
+        return String.format(
+            "Order from %s%n - Beverage: %s (%s) $%.2f%n - Pastry: %s (%s) $%.2f%nTotal: $%.2f",
+            factory.getFactoryName(),
+            beverage.getName(), beverage.getDescription(), beverage.getPriceCents() / 100.0,
+            pastry.getName(), pastry.getDescription(), pastry.getPriceCents() / 100.0,
+            total / 100.0
+        );
+    }
+}
+
+/**
+ * Main Demo — runs both Factory and Abstract Factory examples.
+ */
+public class CoffeeShop {
+    public static void main(String[] args) {
+        demoFactoryPattern();
+        demoAbstractFactoryPattern();
+    }
+
+    private static void demoFactoryPattern() {
+        System.out.println("=== Factory Pattern Demo ===");
+        Beverage b1 = BeverageFactory.createBeverage("espresso");
+        printBeverage(b1);
+        Beverage b2 = BeverageFactory.createBeverage("tea");
+        printBeverage(b2);
+        System.out.println();
+    }
+
+    private static void demoAbstractFactoryPattern() {
+        System.out.println("=== Abstract Factory Pattern Demo ===");
+        OrderService orderA = new OrderService(new CityAFactory());
+        System.out.println(orderA.placeComboOrder());
+        System.out.println();
+        OrderService orderB = new OrderService(new CityBFactory());
+        System.out.println(orderB.placeComboOrder());
+    }
+
+    private static void printBeverage(Beverage b) {
+        System.out.printf("%s: %s - $%.2f%n", b.getName(), b.getDescription(), b.getPriceCents() / 100.0);
+    }
+}
+
